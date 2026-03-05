@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Painel APS Cacoal – Produção + Repasses (2023–2026)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --bg:#f6f7f9; --card:#fff; --muted:#666; --line:#e9ecef; --shadow: 0 2px 10px rgba(0,0,0,.06); --ok:#0b5; --bad:#c22; }
+    * { box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; margin: 18px; background: var(--bg); color:#111; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .sub { color: var(--muted); margin:0 0 16px; }
+    .grid { display:grid; grid-template-columns: 1.2fr 0.8fr; gap: 14px; }
+    .row { display:flex; gap: 14px; flex-wrap: wrap; }
+    .row > * { flex:1; min-width: 320px; }
+    .card { background: var(--card); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); border: 1px solid #f0f0f0; }
+    .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; }
+    .kpi { padding:12px; border-radius:12px; background:#fafafa; border:1px solid var(--line); }
+    .kpi .label { font-size:12px; color:var(--muted); }
+    .kpi .value { font-size:20px; font-weight:800; margin-top:4px; }
+    .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    label { font-size: 12px; color: var(--muted); display:block; margin-bottom:6px; }
+    select, input[type=file] { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background:#fff; }
+    .control { flex:1; min-width: 220px; }
+    .btn { cursor:pointer; border:0; padding:10px 12px; border-radius:12px; background:var(--ok); color:white; font-weight:800; }
+    .btn.alt { background:#234; }
+    .btn:active { transform: translateY(1px); }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:8px; border-bottom:1px solid var(--line); font-size: 13px; vertical-align: top; }
+    th { text-align:left; color:#444; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#f1f3f5; border:1px solid var(--line); font-size:12px; color:#333; }
+    .note { background:#fff3cd; border:1px solid #ffeeba; padding:10px; border-radius:12px; }
+    .alert { padding:10px; border-radius:12px; border:1px solid var(--line); background:#fff; }
+    .alert.bad { border-color:#f3c4c4; background:#fff5f5; }
+    .alert.ok { border-color:#c7efd7; background:#f4fff8; }
+    canvas { max-height: 360px; }
+    .two { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <h1>Painel APS Cacoal – Produção + Repasses (2023–2026)</h1>
+  <p class="sub">Ranking automático • Produção por unidade • Comparação anual • Repasses APS (quando disponível)</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3 style="margin-top:0">Carregamento (automático por padrão)</h3>
+      <p class="muted" style="margin-top:0">
+        Este painel tenta carregar automaticamente:
+        <span class="pill">base_unidades_2023_2026.csv</span> e
+        <span class="pill">repasses_aps_mensal_2023_2026.csv</span>
+        do mesmo diretório do <span class="pill">index.html</span>.
+      </p>
+      <div class="two">
+        <div class="note">
+          <b>Se não carregar sozinho:</b><br/>
+          Use os botões abaixo para selecionar os arquivos manualmente.
+          <div class="muted" style="margin-top:6px">Formato produção: Ano,Unidade,Jan..Dez,Total (vírgula).</div>
+        </div>
+        <div class="controls">
+          <div class="control">
+            <label>CSV Produção (obrigatório)</label>
+            <input id="fileProd" type="file" accept=".csv,text/csv" />
+          </div>
+          <div class="control">
+            <label>CSV Repasses (opcional)</label>
+            <input id="fileRep" type="file" accept=".csv,text/csv" />
+          </div>
+          <div class="control" style="flex:0 0 auto; min-width: 190px">
+            <button class="btn" id="btnCarregar">Carregar manualmente</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:10px">
+        <div class="control">
+          <label>Ano (ranking e gráficos)</label>
+          <select id="selAno"></select>
+        </div>
+        <div class="control">
+          <label>Unidade (produção mensal)</label>
+          <select id="selUnidade"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Indicadores estratégicos</h3>
+      <div class="kpis">
+        <div class="kpi"><div class="label">Atendimentos 2023</div><div class="value" id="kAt23">—</div></div>
+        <div class="kpi"><div class="label">Atendimentos 2024</div><div class="value" id="kAt24">—</div></div>
+        <div class="kpi"><div class="label">Atendimentos 2025</div><div class="value" id="kAt25">—</div></div>
+        <div class="kpi"><div class="label">Atendimentos 2026</div><div class="value" id="kAt26">—</div></div>
+      </div>
+
+      <div class="kpis" style="margin-top:10px">
+        <div class="kpi"><div class="label">Repasses APS 2023</div><div class="value" id="kRp23">—</div></div>
+        <div class="kpi"><div class="label">Repasses APS 2024</div><div class="value" id="kRp24">—</div></div>
+        <div class="kpi"><div class="label">Repasses APS 2025</div><div class="value" id="kRp25">—</div></div>
+        <div class="kpi"><div class="label">Repasses APS 2026</div><div class="value" id="kRp26">—</div></div>
+      </div>
+
+      <div class="two" style="margin-top:10px">
+        <div class="alert" id="alertRepasses">
+          <b>Status Repasses:</b> <span class="muted">aguardando</span>
+        </div>
+        <div class="alert" id="alertCusto">
+          <b>Custo médio por atendimento:</b> <span class="muted">aguardando</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <div class="card">
+      <h3 style="margin-top:0">Produção anual (município)</h3>
+      <canvas id="chartAnoProd"></canvas>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Repasses APS anual (município)</h3>
+      <canvas id="chartAnoRep"></canvas>
+      <p class="muted">Se o arquivo de repasses não existir/for incompleto, o gráfico mostra 0.</p>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <div class="card">
+      <h3 style="margin-top:0">Produção mensal (município) – ano selecionado</h3>
+      <canvas id="chartMesMunicipio"></canvas>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Repasses mensais – ano selecionado</h3>
+      <canvas id="chartMesRep"></canvas>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <div class="card">
+      <h3 style="margin-top:0">Ranking automático das UBS – ano selecionado</h3>
+      <div class="two" style="margin-bottom:8px">
+        <div class="alert ok" id="top5Box"><b>Top 5 UBS</b><div class="muted">—</div></div>
+        <div class="alert bad" id="bot5Box"><b>Bottom 5 UBS</b><div class="muted">—</div></div>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Unidade</th><th>Total</th><th>% do município</th><th>Δ vs ano anterior</th></tr></thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Produção mensal por unidade – ano selecionado</h3>
+      <canvas id="chartMesUnidade"></canvas>
+      <p class="muted">Dica: use isso para discutir gargalos e sazonalidade na transição.</p>
+    </div>
+  </div>
+
+<script>
+  const months = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const money = new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" });
+
+  function parseCSV(text) {
+    const lines = text.trim().split(/\\r?\\n/).filter(Boolean);
+    if (!lines.length) return [];
+    const header = lines[0].split(",").map(s => s.trim());
+    const rows = [];
+    for (let i=1; i<lines.length; i++) {
+      const cols = lines[i].split(",").map(s => s.trim());
+      const obj = {};
+      header.forEach((h, idx) => obj[h] = cols[idx] ?? "");
+      rows.push(obj);
+    }
+    return rows;
+  }
+
+  function toInt(v) {
+    if (v === null || v === undefined) return 0;
+    const s = String(v).replaceAll(".", "").replaceAll(" ", "");
+    const n = parseInt(s, 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function toFloat(v) {
+    if (v === null || v === undefined) return 0;
+    const s = String(v).replaceAll(".", "").replaceAll(" ", "").replace(",", ".");
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function validateProd(rows) {
+    if (!rows.length) return "CSV de produção vazio.";
+    const needed = ["Ano","Unidade", ...months, "Total"];
+    const sample = rows[0];
+    for (const k of needed) if (!(k in sample)) return "Faltou a coluna: " + k;
+    return null;
+  }
+
+  function validateRep(rows) {
+    // expected monthly: Ano,MesNum,Mes,Valor
+    if (!rows.length) return "CSV de repasses vazio.";
+    const needed = ["Ano","MesNum","Mes","Valor"];
+    const sample = rows[0];
+    for (const k of needed) if (!(k in sample)) return "Faltou a coluna: " + k;
+    return null;
+  }
+
+  function formatBR(n) { return (n||0).toLocaleString("pt-BR"); }
+  function setText(id, value) { document.getElementById(id).textContent = value; }
+
+  function fillSelect(el, items, placeholder) {
+    el.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = placeholder;
+    el.appendChild(opt0);
+    items.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      el.appendChild(opt);
+    });
+  }
+
+  let PROD = [];
+  let REP = []; // monthly repasses rows
+  let chartAnoProd, chartAnoRep, chartMesMunicipio, chartMesUnidade, chartMesRep;
+
+  function totalsProdByYear() {
+    const tot = {};
+    PROD.forEach(r => {
+      const y = String(r.Ano);
+      if (r.Unidade === "TOTAL_MUNICIPIO") return;
+      tot[y] = (tot[y] || 0) + toInt(r.Total);
+    });
+    return tot;
+  }
+
+  function totalsRepByYear() {
+    const tot = {};
+    REP.forEach(r => {
+      const y = String(r.Ano);
+      tot[y] = (tot[y] || 0) + toFloat(r.Valor);
+    });
+    return tot;
+  }
+
+  function municipioMonthlyProd(year) {
+    const out = months.map(_ => 0);
+    PROD.filter(r => String(r.Ano)===String(year) && r.Unidade !== "TOTAL_MUNICIPIO")
+        .forEach(r => months.forEach((m, i) => out[i] += toInt(r[m])));
+    return out;
+  }
+
+  function municipioMonthlyRep(year) {
+    const out = months.map(_ => 0);
+    REP.filter(r => String(r.Ano)===String(year))
+       .forEach(r => {
+         const idx = parseInt(r.MesNum,10)-1;
+         if (idx>=0 && idx<12) out[idx] += toFloat(r.Valor);
+       });
+    return out;
+  }
+
+  function unitMonthly(year, unidade) {
+    const r = PROD.find(x => String(x.Ano)===String(year) && x.Unidade === unidade);
+    return months.map(m => r ? toInt(r[m]) : 0);
+  }
+
+  function renderKPIs() {
+    const tp = totalsProdByYear();
+    setText("kAt23", formatBR(tp["2023"]||0));
+    setText("kAt24", formatBR(tp["2024"]||0));
+    setText("kAt25", formatBR(tp["2025"]||0));
+    setText("kAt26", formatBR(tp["2026"]||0));
+
+    const tr = totalsRepByYear();
+    setText("kRp23", money.format(tr["2023"]||0));
+    setText("kRp24", money.format(tr["2024"]||0));
+    setText("kRp25", money.format(tr["2025"]||0));
+    setText("kRp26", money.format(tr["2026"]||0));
+
+    // repasses status
+    const a = document.getElementById("alertRepasses");
+    if (REP.length) {
+      a.className = "alert ok";
+      a.innerHTML = `<b>Status Repasses:</b> carregado (${REP.length} linhas mensais). <div class="muted">Se o arquivo tiver apenas alguns meses, o restante aparece como 0.</div>`;
+    } else {
+      a.className = "alert bad";
+      a.innerHTML = `<b>Status Repasses:</b> não carregado. <div class="muted">Inclua repasses_aps_mensal_2023_2026.csv para habilitar análise financeira.</div>`;
+    }
+
+    // custo médio por atendimento (por ano selecionado)
+    const year = document.getElementById("selAno").value || "2024";
+    const at = tp[year] || 0;
+    const rp = (totalsRepByYear()[year] || 0);
+    const c = document.getElementById("alertCusto");
+    if (at > 0 && rp > 0) {
+      const custo = rp / at;
+      c.className = "alert ok";
+      c.innerHTML = `<b>Custo médio por atendimento (${year}):</b> ${money.format(custo)} <div class="muted">Estimativa: repasses APS / atendimentos e-SUS.</div>`;
+    } else {
+      c.className = "alert";
+      c.innerHTML = `<b>Custo médio por atendimento:</b> <span class="muted">indisponível (precisa repasses e produção no ano).</span>`;
+    }
+  }
+
+  function renderCharts() {
+    const tp = totalsProdByYear();
+    const years = Object.keys(tp).sort();
+    const prodData = years.map(y => tp[y]);
+    const ctxP = document.getElementById("chartAnoProd");
+    if (chartAnoProd) chartAnoProd.destroy();
+    chartAnoProd = new Chart(ctxP, { type:"bar", data:{ labels:years, datasets:[{ label:"Atendimentos (ano)", data:prodData }] }, options:{ responsive:true, plugins:{ legend:{ display:false } } } });
+
+    const tr = totalsRepByYear();
+    const repData = years.map(y => tr[y] || 0);
+    const ctxR = document.getElementById("chartAnoRep");
+    if (chartAnoRep) chartAnoRep.destroy();
+    chartAnoRep = new Chart(ctxR, { type:"bar", data:{ labels:years, datasets:[{ label:"Repasses APS (ano)", data:repData }] }, options:{ responsive:true, plugins:{ legend:{ display:false } } } });
+  }
+
+  function renderMonthly() {
+    const year = document.getElementById("selAno").value;
+    const ctxM = document.getElementById("chartMesMunicipio");
+    const data = municipioMonthlyProd(year);
+    if (chartMesMunicipio) chartMesMunicipio.destroy();
+    chartMesMunicipio = new Chart(ctxM, { type:"line", data:{ labels:months, datasets:[{ label:`Município – ${year}`, data }] }, options:{ responsive:true } });
+
+    const ctxMR = document.getElementById("chartMesRep");
+    const dataR = municipioMonthlyRep(year);
+    if (chartMesRep) chartMesRep.destroy();
+    chartMesRep = new Chart(ctxMR, { type:"line", data:{ labels:months, datasets:[{ label:`Repasses – ${year}`, data:dataR }] }, options:{ responsive:true } });
+  }
+
+  function renderRanking() {
+    const year = document.getElementById("selAno").value;
+    const prev = String(parseInt(year,10)-1);
+
+    const rows = PROD.filter(r => String(r.Ano)===String(year) && r.Unidade !== "TOTAL_MUNICIPIO");
+    const totalMunicipio = rows.reduce((acc, r) => acc + toInt(r.Total), 0);
+
+    // prev totals by unit
+    const prevMap = {};
+    PROD.filter(r => String(r.Ano)===prev && r.Unidade !== "TOTAL_MUNICIPIO").forEach(r => prevMap[r.Unidade] = toInt(r.Total));
+
+    const sorted = [...rows].sort((a,b) => toInt(b.Total) - toInt(a.Total));
+
+    // Top/Bottom 5 summaries
+    const top5 = sorted.slice(0,5).map(r => `${r.Unidade}: ${formatBR(toInt(r.Total))}`).join("<br/>") || "—";
+    const bot5 = sorted.slice(-5).reverse().map(r => `${r.Unidade}: ${formatBR(toInt(r.Total))}`).join("<br/>") || "—";
+    document.querySelector("#top5Box .muted").innerHTML = top5;
+    document.querySelector("#bot5Box .muted").innerHTML = bot5;
+
+    const tbody = document.getElementById("rankBody");
+    tbody.innerHTML = "";
+    sorted.forEach((r, idx) => {
+      const total = toInt(r.Total);
+      const pct = totalMunicipio ? (total/totalMunicipio)*100 : 0;
+      const prevTotal = prevMap[r.Unidade] ?? 0;
+      let deltaTxt = "—";
+      if (prevTotal > 0) {
+        const d = ((total - prevTotal)/prevTotal)*100;
+        const sign = d >= 0 ? "+" : "";
+        deltaTxt = `${sign}${d.toFixed(1)}%`;
+      }
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${idx+1}</td><td>${r.Unidade}</td><td>${formatBR(total)}</td><td>${pct.toFixed(1)}%</td><td>${deltaTxt}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderUnitChart() {
+    const year = document.getElementById("selAno").value;
+    const un = document.getElementById("selUnidade").value;
+    const ctx = document.getElementById("chartMesUnidade");
+    const data = unitMonthly(year, un);
+    if (chartMesUnidade) chartMesUnidade.destroy();
+    chartMesUnidade = new Chart(ctx, { type:"bar", data:{ labels:months, datasets:[{ label:`${un} – ${year}`, data }] }, options:{ responsive:true, plugins:{ legend:{ display:false } } } });
+  }
+
+  function refreshFilters() {
+    const tp = totalsProdByYear();
+    const years = Object.keys(tp).sort();
+    const selAno = document.getElementById("selAno");
+    const prefer = years.includes("2024") ? "2024" : (years[years.length-1] || "");
+    fillSelect(selAno, years, "Selecione");
+    selAno.value = prefer;
+
+    const unidades = [...new Set(PROD.filter(r => String(r.Ano)===selAno.value).map(r => r.Unidade).filter(u => u!=="TOTAL_MUNICIPIO"))].sort();
+    const selUn = document.getElementById("selUnidade");
+    fillSelect(selUn, unidades, "Selecione");
+    selUn.value = unidades[0] || "";
+  }
+
+  async function loadTextFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsText(file, "utf-8");
+    });
+  }
+
+  async function tryAutoload() {
+    // Try production
+    try {
+      const r = await fetch("base_unidades_2023_2026.csv", { cache:"no-store" });
+      if (!r.ok) throw new Error("prod not found");
+      const text = await r.text();
+      const rows = parseCSV(text);
+      const err = validateProd(rows);
+      if (err) throw new Error(err);
+      PROD = rows;
+    } catch(e) {
+      // no autoload; wait for manual
+      return;
+    }
+
+    // Try repasses (optional)
+    try {
+      const r2 = await fetch("repasses_aps_mensal_2023_2026.csv", { cache:"no-store" });
+      if (!r2.ok) throw new Error("rep not found");
+      const t2 = await r2.text();
+      const rr = parseCSV(t2);
+      const err2 = validateRep(rr);
+      if (!err2) REP = rr;
+    } catch(e) { /* optional */ }
+
+    initAndRender();
+  }
+
+  function initAndRender() {
+    refreshFilters();
+    renderKPIs();
+    renderCharts();
+    renderMonthly();
+    renderRanking();
+    renderUnitChart();
+  }
+
+  document.getElementById("btnCarregar").addEventListener("click", async () => {
+    const f1 = document.getElementById("fileProd").files[0];
+    if (!f1) { alert("Selecione o CSV de produção."); return; }
+    const t1 = await loadTextFromFile(f1);
+    const prod = parseCSV(t1);
+    const err = validateProd(prod);
+    if (err) { alert("Produção inválida: " + err); return; }
+    PROD = prod;
+
+    const f2 = document.getElementById("fileRep").files[0];
+    if (f2) {
+      const t2 = await loadTextFromFile(f2);
+      const rep = parseCSV(t2);
+      const err2 = validateRep(rep);
+      if (err2) { alert("Repasses inválido: " + err2); return; }
+      REP = rep;
+    } else {
+      REP = [];
+    }
+    initAndRender();
+  });
+
+  document.getElementById("selAno").addEventListener("change", () => {
+    const year = document.getElementById("selAno").value;
+    if (!year) return;
+    const unidades = [...new Set(PROD.filter(r => String(r.Ano)===String(year)).map(r => r.Unidade).filter(u => u!=="TOTAL_MUNICIPIO"))].sort();
+    const selUn = document.getElementById("selUnidade");
+    fillSelect(selUn, unidades, "Selecione");
+    selUn.value = unidades[0] || "";
+    renderKPIs();
+    renderMonthly();
+    renderRanking();
+    renderUnitChart();
+  });
+
+  document.getElementById("selUnidade").addEventListener("change", () => {
+    renderUnitChart();
+  });
+
+  // kick off
+  tryAutoload();
+</script>
+</body>
+</html>
