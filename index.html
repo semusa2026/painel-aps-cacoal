@@ -403,7 +403,7 @@
   async function tryAutoload() {
     // Try production
     try {
-      const r = await fetch("base_unidades_2023_2026.csv", { cache:"no-store" });
+      const r = await fetch('./base_unidades_2023_2026.csv', { cache:"no-store" });
       if (!r.ok) throw new Error("prod not found");
       const text = await r.text();
       const rows = parseCSV(text);
@@ -417,7 +417,7 @@
 
     // Try repasses (optional)
     try {
-      const r2 = await fetch("repasses_aps_mensal_2023_2026.csv", { cache:"no-store" });
+      const r2 = await fetch('./repasses_aps_mensal_2023_2026.csv', { cache:"no-store" });
       if (!r2.ok) throw new Error("rep not found");
       const t2 = await r2.text();
       const rr = parseCSV(t2);
