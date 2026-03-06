@@ -260,7 +260,7 @@ function renderKPIs() {
   const fin = tf[year] || 0;
   const c = document.getElementById("alertCusto");
   if (currentTab === "aps" && at > 0 && fin > 0) {
-    c.innerHTML = `<b>Custo médio por atendimento (${year}):</b> ${money.format(fin / at)} <div class="muted">Estimativa: repasses APS / atendimentos do bloco atual.</div>`;
+    <!--c.innerHTML = `<b>Custo médio por atendimento (${year}):</b> ${money.format(fin / at)} <div class="muted">Estimativa: repasses APS / atendimentos do bloco atual.</div>`;-->
   } else if (currentTab === "aps") {
     c.innerHTML = `<b>Indicador financeiro:</b> <span class="muted">indisponível.</span>`;
   } else {
