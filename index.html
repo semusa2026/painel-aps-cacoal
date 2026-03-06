@@ -250,7 +250,7 @@ function renderKPIs() {
   const c = document.getElementById("alertCusto");
 
   if (at > 0 && fin > 0) {
-    c.innerHTML = `<b>Custo médio por atendimento (${year}):</b> ${money.format(fin / at)} <div class="muted">Estimativa: valor anual do grupo financeiro / atendimentos do bloco.</div>`;
+    c.innerHTML = `<b>Fonte de dados (${year}):</b> ${money.format(fin / at)} <div class="muted">https://consultafns.saude.gov.br/#/comparativo</div>`;
   } else if (fin > 0) {
     c.innerHTML = `<b>Financeiro anual (${year}):</b> ${money.format(fin)} <div class="muted">Sem produção correspondente para cálculo de custo médio.</div>`;
   } else {
