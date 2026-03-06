@@ -252,9 +252,9 @@ function renderKPIs() {
   if (at > 0 && fin > 0) {
     c.innerHTML = `<b>Fonte dos dados:</b><div class="muted">Fundo Nacional de Saúde – Consulta Fundo a Fundo<br><a href="https://consultafns.saude.gov.br/#/comparativo" target="_blank" https://consultafns.saude.gov.br/#/comparativo</a></div>`;;
   } else if (fin > 0) {
-    c.innerHTML = `<b>Financeiro anual (${year}):</b> ${money.format(fin)} <div class="muted">Sem produção correspondente para cálculo de custo médio.</div>`;
+    c.innerHTML = `<b>Fonte dos dados:</b><div class="muted">Fundo Nacional de Saúde – Consulta Fundo a Fundo<br><a href="https://consultafns.saude.gov.br/#/comparativo" target="_blank" https://consultafns.saude.gov.br/#/comparativo</a></div>`;
   } else {
-    c.innerHTML = `<b>Indicador financeiro:</b> <span class="muted">sem valor informado para o ano selecionado.</span>`;
+    c.innerHTML = `<b>Fonte dos dados:</b><div class="muted">Fundo Nacional de Saúde – Consulta Fundo a Fundo<br><a href="https://consultafns.saude.gov.br/#/comparativo" target="_blank" https://consultafns.saude.gov.br/#/comparativo</a></div>`;
   }
 }
 
