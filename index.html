@@ -250,7 +250,7 @@ function renderKPIs() {
   const c = document.getElementById("alertCusto");
 
   if (at > 0 && fin > 0) {
-    c.innerHTML = `<b>Fonte de dados (${year}):</b> ${money.format(fin / at)} <div class="muted">https://consultafns.saude.gov.br/#/comparativo</div>`;
+    c.innerHTML = `<b>Fonte dos dados:</b><div class="muted">Fundo Nacional de Saúde – Consulta Fundo a Fundo<br><a href="https://consultafns.saude.gov.br/#/comparativo" target="_blank" https://consultafns.saude.gov.br/#/comparativo</a></div>`;;
   } else if (fin > 0) {
     c.innerHTML = `<b>Financeiro anual (${year}):</b> ${money.format(fin)} <div class="muted">Sem produção correspondente para cálculo de custo médio.</div>`;
   } else {
